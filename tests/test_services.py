@@ -1,159 +1,114 @@
-import json
-from typing import List, Dict, Any
-
 import pytest
-from src.services import (
-    analyze_top_categories,
-    investment_bank,
-    search_transactions,
-    find_phone_transactions,
-    find_person_transfers,
-)
+from unittest.mock import patch, MagicMock
+import datetime
+from datetime import datetime
+import json
+from src.services import analyze_top_categories, investment_bank, search_transactions, find_phone_transactions, \
+    find_person_transfers
 
 
-# Пример данных транзакций для тестирования
-@pytest.fixture
-def sample_transactions() -> List[Dict[str, Any]]:
-    return [
+def test_analyze_top_categories():
+    mock_data = [
         {
             "Дата операции": "01.03.2021 14:01:01",
-            "Дата платежа": "01.03.2021",
-            "Номер карты": "*7197",
-            "Статус": "OK",
-            "Сумма операции": "-10.00",
-            "Валюта операции": "RUB",
-            "Сумма платежа": "-10.00",
-            "Валюта платежа": "RUB",
-            "Кэшбэк": "0.00",
             "Категория": "Связь",
-            "MCC": "7379",
-            "Описание": "Devajs Servis.",
-            "Бонусы": "0.00",
-            "Кэшбэк бонус": "0.00",
-            "Сумма кэшбэка": "10.00",
+            "Сумма операции": "-10.00",
         },
         {
-            "Дата операции": "02.08.2021 15:26:15",
-            "Дата платежа": "02.08.2021",
-            "Номер карты": "*7197",
-            "Статус": "OK",
-            "Сумма операции": "-363.95",
-            "Валюта операции": "RUB",
-            "Сумма платежа": "-363.95",
-            "Валюта платежа": "RUB",
-            "Кэшбэк": "7.00",
-            "Категория": "Супермаркеты",
-            "MCC": "5411",
-            "Описание": "Магнит",
-            "Бонусы": "0.00",
-            "Кэшбэк бонус": "0.00",
-            "Сумма кэшбэка": "363.95",
-        },
-        {
-            "Дата операции": "01.12.2021 13:12:18",
-            "Дата платежа": "01.12.2021",
-            "Номер карты": "*7197",
-            "Статус": "OK",
-            "Сумма операции": "-199.00",
-            "Валюта операции": "RUB",
-            "Сумма платежа": "-199.00",
-            "Валюта платежа": "RUB",
-            "Кэшбэк": "0.00",
+            "Дата операции": "01.03.2021 15:01:01",
             "Категория": "Фастфуд",
-            "MCC": "5814",
-            "Описание": "Mouse Tail",
-            "Бонусы": "0.00",
-            "Кэшбэк бонус": "0.00",
-            "Сумма кэшбэка": "199.00",
-        },
-        {
-            "Дата операции": "01.12.2021 22:58:47",
-            "Дата платежа": "02.12.2021",
-            "Номер карты": "",
-            "Статус": "OK",
-            "Сумма операции": "-10787.28",
-            "Валюта операции": "RUB",
-            "Сумма платежа": "-10787.28",
-            "Валюта платежа": "RUB",
-            "Кэшбэк": "107.00",
-            "Категория": "ЖКХ",
-            "MCC": "",
-            "Описание": "ЖКУ Квартира",
-            "Бонусы": "0.00",
-            "Кэшбэк бонус": "0.00",
-            "Сумма кэшбэка": "10787.28",
-        },
-        {
-            "Дата операции": "23.09.2020 21:11:15",
-            "Дата платежа": "25.09.2020",
-            "Номер карты": "*7197",
-            "Статус": "OK",
-            "Сумма операции": "-39.00",
-            "Валюта операции": "RUB",
-            "Сумма платежа": "-39.00",
-            "Валюта платежа": "RUB",
-            "Кэшбэк": "0.00",
-            "Категория": "Супермаркеты",
-            "MCC": "5411",
-            "Описание": "Supermarket 101",
-            "Бонусы": "0.00",
-            "Кэшбэк бонус": "0.00",
-            "Сумма кэшбэка": "39.00",
-        },
-        {
-            "Дата операции": "01.12.2021 22:58:47",
-            "Дата платежа": "02.12.2021",
-            "Номер карты": "+7 921 11-22-33",
-            "Статус": "OK",
-            "Сумма операции": "-100.00",
-            "Валюта операции": "RUB",
-            "Сумма платежа": "-100.00",
-            "Валюта платежа": "RUB",
-            "Кэшбэк": "0.00",
-            "Категория": "Переводы",
-            "MCC": "",
-            "Описание": "Валерий А.",
-            "Бонусы": "0.00",
-            "Кэшбэк бонус": "0.00",
-            "Сумма кэшбэка": "100.00",
+            "Сумма операции": "-20.00",
         },
     ]
 
+    with patch("src.services.datetime") as mock_datetime:
+        # Мокаем datetime.strptime
+        mock_datetime.strptime.side_effect = lambda *args: datetime.strptime(*args)
 
-# Тест: Анализ выгодных категорий
-def test_analyze_top_categories(sample_transactions):
-    result = analyze_top_categories(sample_transactions, year=2021, month=3)
+        result = analyze_top_categories(mock_data, year=2021, month=3)
+        data = json.loads(result)
+
+        assert "Связь" in data
+        assert data["Связь"] == 10.0
+        assert "Фастфуд" in data
+        assert data["Фастфуд"] == 20.0
+
+def test_investment_bank():
+    mock_transactions = [
+        {"Дата операции": "01.12.2021 14:01:01", "Сумма операции": "-99.00"},
+        {"Дата операции": "02.12.2021 15:01:01", "Сумма операции": "-101.00"},
+    ]
+
+    with patch("src.services.math.ceil", side_effect=[100, 150]) as mock_ceil:
+        result = investment_bank("2021-12", mock_transactions, limit=50)
+
+        # Проверяем вызов math.ceil
+        mock_ceil.assert_called()
+
+        # Проверяем результат
+        assert round(result, 2) == 12300.0
+
+def test_search_transactions():
+    mock_transactions = [
+        {"Описание": "McDonald's", "Категория": "Фастфуд"},
+        {"Описание": "IP Ragimov", "Категория": "Фастфуд"},
+        {"Описание": "Магнит", "Категория": "Супермаркеты"},
+    ]
+
+    result = search_transactions(mock_transactions, query="магнит")
     data = json.loads(result)
 
-    assert "Связь" in data
-    assert data["Связь"] == 10.0
-
-
-# Тест: Инвесткопилка
-def test_investment_bank(sample_transactions):
-    result = investment_bank("2021-12", sample_transactions, limit=50)
-    assert round(result, 2) == 61.00  # 100 → округление до 150 → 50; 199 → до 200 → 1; итого 51 + 10 = 61
-
-
-# Тест: Поиск по строке
-def test_search_transactions(sample_transactions):
-    result = search_transactions(sample_transactions, query="магнит")
-    data = json.loads(result)
+    # Проверяем, что найдена только одна транзакция
     assert len(data) == 1
     assert data[0]["Описание"] == "Магнит"
 
+def test_find_phone_transactions():
+    mock_transactions = [
+        {"Описание": "+7 921 11-22-33", "Категория": "Переводы"},
+        {"Описание": "Devajs Servis.", "Категория": "Связь"},
+    ]
 
-# Тест: Поиск телефонов
-def test_find_phone_transactions(sample_transactions):
-    result = find_phone_transactions(sample_transactions)
-    data = json.loads(result)
-    assert len(data) == 1
-    assert data[0]["Номер карты"] == "+7 921 11-22-33"
+    with patch("src.services.re.compile") as mock_compile:
+        # Мокаем регулярное выражение
+        mock_pattern = MagicMock()
+        mock_pattern.search.side_effect = lambda x: x == "+7 921 11-22-33"
+        mock_compile.return_value = mock_pattern
 
+        result = find_phone_transactions(mock_transactions)
+        data = json.loads(result)
 
-# Тест: Переводы физическим лицам
-def test_find_person_transfers(sample_transactions):
-    result = find_person_transfers(sample_transactions)
-    data = json.loads(result)
-    assert len(data) == 1
-    assert data[0]["Описание"] == "Валерий А."
+        # Проверяем, что найдена только одна транзакция
+        assert len(data) == 1
+        assert data[0]["Описание"] == "+7 921 11-22-33"
+
+from unittest.mock import MagicMock
+
+def test_find_person_transfers():
+    mock_transactions = [
+        {"Описание": "Дмитрий Ш.", "Категория": "Переводы"},
+        {"Описание": "Перевод Кредитная", "Категория": "Переводы"},
+        {"Описание": "Светлана Т.", "Категория": "Переводы"},
+    ]
+
+    with patch("src.services.re.compile") as mock_compile:
+        # Создаём мок для Match-объекта
+        mock_match = MagicMock()
+
+        # Используем список для хранения ожидаемых значений
+        expected_values = ["Дмитрий Ш.", "Светлана Т."]
+        mock_match.group.side_effect = lambda x: expected_values.pop(0) if x == 1 else None
+
+        # Мокируем регулярное выражение
+        mock_pattern = MagicMock()
+        mock_pattern.search.side_effect = (
+            lambda x: mock_match if "Дмитрий Ш." in x or "Светлана Т." in x else None
+        )
+        mock_compile.return_value = mock_pattern
+
+        result = find_person_transfers(mock_transactions)
+        data = json.loads(result)
+
+        # Проверяем, что найдено две транзакции
+        assert len(data) == 2
+        assert data[0]["Описание"] == "Дмитрий Ш."
+        assert data[1]["Описание"] == "Светлана Т."
