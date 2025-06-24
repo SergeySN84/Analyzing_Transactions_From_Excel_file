@@ -1,8 +1,14 @@
+import os
 import pandas as pd
 from datetime import datetime, timedelta
 import logging
 import requests
+from dotenv import load_dotenv
 
+# Загружаем переменные окружения
+load_dotenv()
+
+CURRATE_API_KEY = os.getenv("CURRATE_API_KEY")
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,12 +77,9 @@ def prepare_transfers_and_cash(expenses_df: pd.DataFrame) -> list:
     return result
 
 
-API_KEY = "c8c3658298b905bb93ab7f0365e119f7"
-
-
 def fetch_currency_rates():
     """Получает курсы валют через API."""
-    url = f"https://currate.ru/api/?get=rates&pairs=USDRUB,EURRUB&key={API_KEY}"
+    url = f"https://currate.ru/api/?get=rates&pairs=USDRUB,EURRUB&key={CURRATE_API_KEY}"
     try:
         response = requests.get(url)
         if response.status_code == 200:
